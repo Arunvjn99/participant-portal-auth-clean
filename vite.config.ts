@@ -11,11 +11,11 @@ export default defineConfig({
     },
   },
   server: {
-    // Proxy removed - using Netlify Functions in production
-    // For local development, use Netlify Dev: netlify dev
+    // Proxy for local development with Netlify Dev
+    // In production, requests go directly to Netlify Functions
     proxy: {
       '/api': {
-        target: 'http://localhost:8888' // Netlify Dev server,
+        target: 'http://localhost:8888',
         changeOrigin: true,
       },
     },
