@@ -1,0 +1,24 @@
+.dark {
+  --color-background: #111827;
+  --color-background-secondary: #1f2937;
+  --color-background-tertiary: #4b5563;
+
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #6b7280;
+  --color-text-inverse: #111827;
+
+  --color-border: #4b5563;
+  --color-surface: #1a1f2e;
+  --color-surface-elevated: #0b1220;
+
+  --card-bg: var(--color-surface-elevated);
+  --card-border: rgb(255 255 255 / 0.10);
+  --card-shadow: var(--shadow-md);
+
+  /* Reduced shadows for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}

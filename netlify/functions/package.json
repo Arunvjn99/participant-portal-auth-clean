@@ -1,0 +1,9 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@google-cloud/speech": "^6.0.0",
+    "@google-cloud/text-to-speech": "^5.0.0"
+  }
+}

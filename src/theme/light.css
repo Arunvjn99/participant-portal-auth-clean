@@ -1,0 +1,18 @@
+.light {
+  --color-background: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-background-tertiary: #f3f4f6;
+
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverse: #ffffff;
+
+  --color-border: #e5e7eb;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+
+  --card-bg: var(--color-surface-elevated);
+  --card-border: rgb(17 24 39 / 0.08);
+  --card-shadow: var(--shadow-lg);
+}
