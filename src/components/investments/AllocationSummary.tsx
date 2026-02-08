@@ -6,10 +6,20 @@ import { AllocationChart } from "./AllocationChart";
 import { useInvestment } from "../../context/InvestmentContext";
 import { ConfirmAllocationModal } from "./ConfirmAllocationModal";
 
+type AllocationSummaryVariant = "enrollment" | "dashboard";
+
+interface AllocationSummaryProps {
+  /** "enrollment" = no sticky/floating; "dashboard" = sticky (default) */
+  variant?: AllocationSummaryVariant;
+}
+
 /**
- * AllocationSummary - Sticky right-side panel with weighted allocation summary
+ * AllocationSummary - Right-side panel with weighted allocation summary.
+ * In enrollment: scrolls naturally. In dashboard: sticky.
  */
-export const AllocationSummary = () => {
+export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryProps) => {
+  const isEnrollment = variant === "enrollment";
+  const cardClassName = `allocation-summary ${isEnrollment ? "allocation-summary--enrollment" : "allocation-summary--sticky"}`;
   const navigate = useNavigate();
   const {
     weightedSummary,
@@ -51,7 +61,7 @@ export const AllocationSummary = () => {
   return (
     <>
       <div className="allocation-summary-panel">
-        <DashboardCard className="allocation-summary allocation-summary--sticky">
+        <DashboardCard className={cardClassName}>
           <div className="allocation-summary__content">
             <div className="allocation-summary__header">
               <div>

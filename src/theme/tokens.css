@@ -76,4 +76,10 @@
   --text-secondary: var(--color-text-secondary);
   --border: var(--color-border);
   --accent: var(--color-primary);
+
+  /* Dashboard semantic aliases */
+  --bg-surface: var(--color-surface);
+  --bg-elevated: var(--color-surface-elevated);
+  --border-subtle: var(--color-border);
+  --accent-primary: var(--color-primary);
 }

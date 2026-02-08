@@ -24,6 +24,19 @@
   background-color: var(--color-background-tertiary);
 }
 
+/* Radial Enrollment Stepper - no background/border in dark */
+.dark .enrollment-stepper__ring-track {
+  stroke: var(--color-border);
+}
+
+.dark .enrollment-stepper__title {
+  color: var(--color-text);
+}
+
+.dark .enrollment-stepper__subtitle {
+  color: var(--color-text-secondary);
+}
+
 /* Enrollment Footer - unified sticky footer */
 .dark .enrollment-footer {
   border-top-color: var(--color-border);
@@ -71,6 +84,11 @@
 }
 
 /* ========== Contribution Page ========== */
+.dark .contrib-section-card {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
 .dark .contrib-card {
   background: var(--color-surface);
   border-color: var(--color-border);

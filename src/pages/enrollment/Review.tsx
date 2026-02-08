@@ -153,6 +153,15 @@ export const Review = () => {
     return "Aggressive Investor";
   };
 
+  const formatContributionPct = (pct: number) =>
+    pct % 1 === 0 ? `${pct}%` : `${pct.toFixed(1)}%`;
+
+  const PencilIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+    </svg>
+  );
+
   const buildEnrollmentSummary = useCallback(() => {
     const lines: string[] = [
       "Enrollment Summary",
@@ -240,45 +249,39 @@ export const Review = () => {
         </div>
       )}
       <div className="review-page review-page--with-footer">
-        <div className="review-page__stepper">
-          <EnrollmentStepper currentStep={3} />
+        <div className="enrollment-stepper-section review-page__stepper">
+          <EnrollmentStepper
+            currentStep={3}
+            title="Review Your Enrollment"
+            subtitle="Please review your selections before confirming enrollment."
+          />
         </div>
 
-        <div className="review-page__header">
-          <h1 className="review-page__title">
-            Review Your Enrollment
-            <span className="review-page__step-badge">4/4</span>
-          </h1>
-          <p className="review-page__description">
-            Please review your selections before confirming enrollment.
-          </p>
+        {/* Investment Goal Simulator - full width per Figma (505-4259) */}
+        <div className="review-page__goal-simulator-card">
+          <div className="review-page__goal-simulator-main">
+            <div className="review-page__goal-simulator-progress">
+              <svg viewBox="0 0 100 100" className="review-page__goal-simulator-ring">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="8" />
+                <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${Math.min(100, fundedPct) * 2.64} 264`} transform="rotate(-90 50 50)" />
+              </svg>
+              <span className="review-page__goal-simulator-value">Reached {Math.min(100, Math.round(fundedPct))}%</span>
+            </div>
+            <div className="review-page__goal-simulator-body">
+              <h3 className="review-page__goal-simulator-title">Investment Goal Simulator</h3>
+              <p className="review-page__goal-simulator-status">Based on your current selections, you are on track.</p>
+              <p className="review-page__goal-simulator-shortfall">Projected Shortfall: $0</p>
+            </div>
+          </div>
+          <div className="review-page__goal-simulator-actions">
+            <Button type="button" onClick={() => setShowAdvisorModal(true)} className="review-page__goal-simulator-optimize">
+              Optimize your score
+            </Button>
+          </div>
         </div>
 
         <div className="review-page__content">
           <div className="review-page__left">
-            {/* Investment Goal Simulator - blue card, button on right per Figma */}
-            <div className="review-page__block review-page__block--goal-simulator review-page__goal-simulator-card">
-              <div className="review-page__goal-simulator-main">
-                <div className="review-page__goal-simulator-progress">
-                  <svg viewBox="0 0 100 100" className="review-page__goal-simulator-ring">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="8" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${Math.min(100, fundedPct) * 2.64} 264`} transform="rotate(-90 50 50)" />
-                  </svg>
-                  <span className="review-page__goal-simulator-value">Reached {Math.min(100, Math.round(fundedPct))}%</span>
-                </div>
-                <div className="review-page__goal-simulator-body">
-                  <h3 className="review-page__goal-simulator-title">Investment Goal Simulator</h3>
-                  <p className="review-page__goal-simulator-status">Based on your current selections, you are on track.</p>
-                  <p className="review-page__goal-simulator-shortfall">Projected Shortfall: $0</p>
-                </div>
-              </div>
-              <div className="review-page__goal-simulator-actions">
-                <Button type="button" onClick={() => setShowAdvisorModal(true)} className="review-page__goal-simulator-optimize">
-                  Optimize your score
-                </Button>
-              </div>
-            </div>
-
             {/* Contributions - only sources selected in Contribution step (sourceAllocation > 0) */}
             <DashboardCard
               title="Contributions"
@@ -290,33 +293,51 @@ export const Review = () => {
               className="review-page__block review-page__block--contributions"
             >
               <div className="review-page__contributions-grid">
-                {preTax > 0 && (
-                  <div className="review-page__contribution-card">
-                    <div className="review-page__contribution-value">{((preTax / 100) * contributionTotal).toFixed(1)}%</div>
+                <div className="review-page__contribution-card">
+                  <span className="review-page__contribution-source">Pre-tax</span>
+                  <button type="button" className="review-page__contribution-edit" aria-label="Edit Pre-tax" onClick={() => navigate("/enrollment/contribution")}>
+                    <PencilIcon />
+                  </button>
+                  <div className="review-page__contribution-value-wrap">
+                    <div className={`review-page__contribution-value ${preTax > 0 ? "review-page__contribution-value--active" : ""}`}>
+                      {formatContributionPct((preTax / 100) * contributionTotal)}
+                    </div>
                     <div className="review-page__contribution-label">of paycheck</div>
-                    <span className="review-page__contribution-source">Pre-tax</span>
-                    <button type="button" className="review-page__contribution-edit" aria-label="Edit Pre-tax" onClick={() => navigate("/enrollment/contribution")}>✎</button>
                   </div>
-                )}
-                {roth > 0 && (
-                  <div className="review-page__contribution-card">
-                    <div className="review-page__contribution-value">{((roth / 100) * contributionTotal).toFixed(1)}%</div>
+                </div>
+                <div className="review-page__contribution-card">
+                  <span className="review-page__contribution-source">Roth</span>
+                  <button type="button" className="review-page__contribution-edit" aria-label="Edit Roth" onClick={() => navigate("/enrollment/contribution")}>
+                    <PencilIcon />
+                  </button>
+                  <div className="review-page__contribution-value-wrap">
+                    <div className={`review-page__contribution-value ${roth > 0 ? "review-page__contribution-value--active" : ""}`}>
+                      {formatContributionPct((roth / 100) * contributionTotal)}
+                    </div>
                     <div className="review-page__contribution-label">of paycheck</div>
-                    <span className="review-page__contribution-source">Roth</span>
-                    <button type="button" className="review-page__contribution-edit" aria-label="Edit Roth" onClick={() => navigate("/enrollment/contribution")}>✎</button>
                   </div>
-                )}
-                {afterTax > 0 && (
-                  <div className="review-page__contribution-card">
-                    <div className="review-page__contribution-value">{((afterTax / 100) * contributionTotal).toFixed(1)}%</div>
+                </div>
+                <div className="review-page__contribution-card">
+                  <span className="review-page__contribution-source">After-tax</span>
+                  <button type="button" className="review-page__contribution-edit" aria-label="Edit After-tax" onClick={() => navigate("/enrollment/contribution")}>
+                    <PencilIcon />
+                  </button>
+                  <div className="review-page__contribution-value-wrap">
+                    <div className={`review-page__contribution-value ${afterTax > 0 ? "review-page__contribution-value--active" : ""}`}>
+                      {formatContributionPct((afterTax / 100) * contributionTotal)}
+                    </div>
                     <div className="review-page__contribution-label">of paycheck</div>
-                    <span className="review-page__contribution-source">After-tax</span>
-                    <button type="button" className="review-page__contribution-edit" aria-label="Edit After-tax" onClick={() => navigate("/enrollment/contribution")}>✎</button>
                   </div>
-                )}
+                </div>
               </div>
               <button type="button" className="review-page__increase-contribution" onClick={() => navigate("/enrollment/contribution")}>
-                <span className="review-page__increase-icon">+</span> Increase my contribution
+                <span className="review-page__increase-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </span>
+                Increase my contribution
               </button>
             </DashboardCard>
 
@@ -349,7 +370,10 @@ export const Review = () => {
                   <svg className="review-page__allocation-error-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                     <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  Total allocation is {totalAllocation.toFixed(0)}%. Must equal 100%. Please adjust your fund percentages to proceed.
+                  <div className="review-page__allocation-error-content">
+                    <span className="review-page__allocation-error-main">Total allocation is {totalAllocation.toFixed(0)}%. Must equal 100%.</span>
+                    <span className="review-page__allocation-error-sub">Please adjust your fund percentages to proceed.</span>
+                  </div>
                 </div>
               )}
               <div className="review-page__investments-table-wrap">
@@ -367,9 +391,13 @@ export const Review = () => {
                       <tr key={fund.id}>
                         <td>
                           <div className="review-page__fund-cell">
-                            <span className="review-page__fund-ticker">{fund.ticker}</span>
-                            <span className="review-page__fund-name">{fund.name}</span>
-                            <span className="review-page__fund-risk">Risk Score: {Math.min(5, Math.ceil(fund.riskLevel / 2))}/5</span>
+                            <span className={`review-page__fund-ticker-pill ${["Large Cap", "International"].some(c => fund.assetClass.includes(c)) ? "review-page__fund-ticker-pill--blue" : ""}`}>
+                              {fund.ticker}
+                            </span>
+                            <div className="review-page__fund-info">
+                              <span className="review-page__fund-name">{fund.name}</span>
+                              <span className="review-page__fund-risk">Risk Score: {Math.min(5, Math.ceil(fund.riskLevel / 2))}/5</span>
+                            </div>
                           </div>
                         </td>
                         <td>{getAssetClassLabel(fund.assetClass)}</td>
@@ -399,92 +427,37 @@ export const Review = () => {
                 </span>
               </div>
             </DashboardCard>
-
-            {/* Important Legal Documents */}
-            <DashboardCard className="review-page__block review-page__block--legal">
-              <h3 className="review-page__documents-title">
-                <svg className="review-page__documents-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                Important Legal Documents
-              </h3>
-              <p className="review-page__documents-sub">3 documents available - <span className="review-page__documents-required-count">2 required</span></p>
-              <p className="review-page__documents-hint">
-                <svg className="review-page__documents-hint-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                Please acknowledge all required documents to enable enrollment.
-              </p>
-              <div className="review-page__documents-list">
-                <label className="review-page__document-item">
-                  <input type="checkbox" checked={acknowledgements.feeDisclosure} onChange={(e) => setAcknowledgements((p) => ({ ...p, feeDisclosure: e.target.checked }))} />
-                  <span className="review-page__document-name">Fee Disclosure Statement</span>
-                  <span className="review-page__document-required">Required</span>
-                  <span className="review-page__document-arrow">→</span>
-                </label>
-                <label className="review-page__document-item">
-                  <input type="checkbox" checked={acknowledgements.qdefault} onChange={(e) => setAcknowledgements((p) => ({ ...p, qdefault: e.target.checked }))} />
-                  <span className="review-page__document-name">Qualified Default Investment Notice</span>
-                  <span className="review-page__document-required">Required</span>
-                  <span className="review-page__document-arrow">→</span>
-                </label>
-              </div>
-            </DashboardCard>
-
-            {/* What Happens Next */}
-            <DashboardCard title="What Happens Next" className="review-page__block review-page__block--next">
-              <div className="review-page__next-cards">
-                <div className="review-page__next-card">
-                  <span className="review-page__next-icon">📅</span>
-                  <div>
-                    <h4>When Contributions Start</h4>
-                    <p>Deductions will begin on the first payroll cycle following the 15th of next month.</p>
-                  </div>
-                </div>
-                <div className="review-page__next-card">
-                  <span className="review-page__next-icon">🕐</span>
-                  <div>
-                    <h4>Payroll Timeline</h4>
-                    <p>Processing typically takes 1-2 pay periods to reflect on your pay stub.</p>
-                  </div>
-                </div>
-                <div className="review-page__next-card">
-                  <span className="review-page__next-icon">⚙</span>
-                  <div>
-                    <h4>Modify Later</h4>
-                    <p>You can change your contribution rate or investment elections at any time.</p>
-                  </div>
-                </div>
-              </div>
-            </DashboardCard>
-
-            {/* Download / Email */}
-            <div className="review-page__block review-page__block--download review-page__download-actions">
-              <Button type="button" onClick={handleDownloadPDF} className="review-page__download-btn button--outline">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <polyline points="7 10 12 15 17 10" /> <line x1="12" y1="15" x2="12" y2="3" /> </svg>
-                Download PDF Summary
-              </Button>
-              <Button type="button" onClick={handleEmailSummary} className="review-page__download-btn button--outline">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"> <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /> <polyline points="22,6 12,13 2,6" /> </svg>
-                Email Summary
-              </Button>
-            </div>
           </div>
 
           {/* Right rail */}
           <div className="review-page__right">
-            {/* Plan Details - from selectedPlan state */}
+            {/* Plan Details - per Figma 505-4560 */}
             <DashboardCard className="review-page__block review-page__block--plan">
               <div className="review-page__plan-header">
-                <h3>Plan Details</h3>
+                <h3 className="review-page__plan-title">Plan Details</h3>
                 <a href="/enrollment/choose-plan" onClick={handlePlanViewDetails} className="review-page__plan-view">View details</a>
               </div>
-              <dl className="review-page__plan-dl">
-                <dt>PLAN NAME</dt>
-                <dd>{enrollment.state.selectedPlan ? PLAN_TYPE_LABELS[enrollment.state.selectedPlan] : "401(k) Plan"}</dd>
-                <dt>TYPE</dt>
-                <dd>{selectedPlanName || "Traditional 401(k)"}</dd>
-                <dt>MATCH</dt>
-                <dd className="review-page__plan-match">{enrollment.state.assumptions.employerMatchPercentage}% Employer Match</dd>
-                <dt>Risk Profile</dt>
-                <dd><span className="review-page__plan-risk-pill">{formatRiskLevel(weightedSummary.riskLevel)}</span></dd>
-              </dl>
+              <div className="review-page__plan-body">
+                <div className="review-page__plan-row review-page__plan-row--full">
+                  <span className="review-page__plan-label">PLAN NAME</span>
+                  <span className="review-page__plan-value">{enrollment.state.selectedPlan ? PLAN_TYPE_LABELS[enrollment.state.selectedPlan] : "401(k) Plan"}</span>
+                </div>
+                <div className="review-page__plan-row review-page__plan-row--cols">
+                  <div className="review-page__plan-col">
+                    <span className="review-page__plan-label">TYPE</span>
+                    <span className="review-page__plan-value">{selectedPlanName || "Traditional 401(k)"}</span>
+                  </div>
+                  <div className="review-page__plan-col review-page__plan-col--right">
+                    <span className="review-page__plan-label">MATCH</span>
+                    <span className="review-page__plan-value review-page__plan-match">{enrollment.state.assumptions.employerMatchPercentage}% Employer Match</span>
+                  </div>
+                </div>
+                <div className="review-page__plan-separator" />
+                <div className="review-page__plan-row review-page__plan-row--profile">
+                  <span className="review-page__plan-label review-page__plan-label--normal">Risk Profile</span>
+                  <span className="review-page__plan-risk-pill">{formatRiskLevel(weightedSummary.riskLevel)}</span>
+                </div>
+              </div>
             </DashboardCard>
 
             {/* Allocation Summary - static, never overlaps AI Insights */}
@@ -558,6 +531,75 @@ export const Review = () => {
               </div>
               <p className="review-page__insights-footer">Insights generated from your plan data.</p>
             </DashboardCard>
+          </div>
+        </div>
+
+        {/* Full-width sections per Figma - Legal Documents, What Happens Next */}
+        <div className="review-page__full-width">
+          {/* Important Legal Documents */}
+          <DashboardCard className="review-page__block review-page__block--legal">
+            <h3 className="review-page__documents-title">
+                <svg className="review-page__documents-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Important Legal Documents
+            </h3>
+            <p className="review-page__documents-sub">3 documents available - <span className="review-page__documents-required-count">2 required</span></p>
+            <p className="review-page__documents-hint">
+              <svg className="review-page__documents-hint-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Please acknowledge all required documents to enable enrollment.
+            </p>
+            <div className="review-page__documents-list">
+              <label className="review-page__document-item">
+                <input type="checkbox" checked={acknowledgements.feeDisclosure} onChange={(e) => setAcknowledgements((p) => ({ ...p, feeDisclosure: e.target.checked }))} />
+                <span className="review-page__document-name">Fee Disclosure Statement</span>
+                <span className="review-page__document-required">Required</span>
+                <span className="review-page__document-arrow">→</span>
+              </label>
+              <label className="review-page__document-item">
+                <input type="checkbox" checked={acknowledgements.qdefault} onChange={(e) => setAcknowledgements((p) => ({ ...p, qdefault: e.target.checked }))} />
+                <span className="review-page__document-name">Qualified Default Investment Notice</span>
+                <span className="review-page__document-required">Required</span>
+                <span className="review-page__document-arrow">→</span>
+              </label>
+            </div>
+          </DashboardCard>
+
+          {/* What Happens Next */}
+          <DashboardCard title="What Happens Next" className="review-page__block review-page__block--next">
+            <div className="review-page__next-cards">
+              <div className="review-page__next-card">
+                <span className="review-page__next-icon">📅</span>
+                <div>
+                  <h4>When Contributions Start</h4>
+                  <p>Deductions will begin on the first payroll cycle following the 15th of next month.</p>
+                </div>
+              </div>
+              <div className="review-page__next-card">
+                <span className="review-page__next-icon">🕐</span>
+                <div>
+                  <h4>Payroll Timeline</h4>
+                  <p>Processing typically takes 1-2 pay periods to reflect on your pay stub.</p>
+                </div>
+              </div>
+              <div className="review-page__next-card">
+                <span className="review-page__next-icon">⚙</span>
+                <div>
+                  <h4>Modify Later</h4>
+                  <p>You can change your contribution rate or investment elections at any time.</p>
+                </div>
+              </div>
+            </div>
+          </DashboardCard>
+
+          {/* Download / Email */}
+          <div className="review-page__block review-page__block--download review-page__download-actions">
+            <Button type="button" onClick={handleDownloadPDF} className="review-page__download-btn button--outline">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <polyline points="7 10 12 15 17 10" /> <line x1="12" y1="15" x2="12" y2="3" /> </svg>
+              Download PDF Summary
+            </Button>
+            <Button type="button" onClick={handleEmailSummary} className="review-page__download-btn button--outline">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"> <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /> <polyline points="22,6 12,13 2,6" /> </svg>
+              Email Summary
+            </Button>
           </div>
         </div>
 

@@ -267,16 +267,16 @@ export const Contribution = () => {
   return (
     <DashboardLayout header={<DashboardHeader />}>
       <div className="flex flex-col gap-6 w-full pb-24">
-        <div className="mb-4">
-          <EnrollmentStepper currentStep={1} />
-          <div className="choose-plan__header mt-4">
-            <h1 className="choose-plan__title">Set Your Contribution Rate</h1>
-            <p className="choose-plan__subtitle">Confirm your contribution rate and understand its impact on your retirement savings.</p>
-          </div>
+        <div className="enrollment-stepper-section">
+          <EnrollmentStepper
+            currentStep={1}
+            title="Set Your Contribution Rate"
+            subtitle="Choose how much to contribute to your retirement account. You can change this anytime."
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[58%_1fr] items-start">
-          <div className="flex flex-col gap-10">
+          <div className="contrib-section-card flex flex-col gap-10">
             {/* PRIMARY: How much do you wish to contribute? */}
             <section className="space-y-8">
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
