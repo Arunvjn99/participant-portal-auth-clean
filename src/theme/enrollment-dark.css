@@ -479,8 +479,7 @@
   color: var(--color-text);
 }
 
-.dark .allocation-summary__subtitle,
-.dark .allocation-summary__auto-rebalance-text {
+.dark .allocation-summary__subtitle {
   color: var(--color-text-secondary);
 }
 

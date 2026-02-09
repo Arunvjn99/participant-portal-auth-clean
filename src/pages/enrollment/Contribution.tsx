@@ -4,7 +4,6 @@ import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { DashboardHeader } from "../../components/dashboard/DashboardHeader";
 import { useEnrollment } from "../../enrollment/context/EnrollmentContext";
 import { EnrollmentStepper } from "../../components/enrollment/EnrollmentStepper";
-import { InvestmentProfileWizard } from "../../components/enrollment/InvestmentProfileWizard";
 import Button from "../../components/ui/Button";
 import { loadEnrollmentDraft, saveEnrollmentDraft } from "../../enrollment/enrollmentDraftStore";
 import { EnrollmentFooter } from "../../components/enrollment/EnrollmentFooter";
@@ -16,6 +15,7 @@ import {
 } from "../../enrollment/logic/contributionCalculator";
 import { calculateProjection } from "../../enrollment/logic/projectionCalculator";
 import type { ProjectionDataPoint } from "../../enrollment/logic/types";
+import { formatYAxisLabel, getYAxisTicks } from "../../utils/projectionChartAxis";
 
 const SLIDER_MIN = 1;
 const SLIDER_MAX = 25;
@@ -50,7 +50,6 @@ export const Contribution = () => {
     setSourceAllocation,
     setSourcesEditMode,
     setSourcesViewMode,
-    setAutoIncrease,
     monthlyContribution,
     perPaycheck,
   } = useEnrollment();
@@ -119,41 +118,6 @@ export const Contribution = () => {
       state.assumptions.inflationRate,
     ]
   );
-
-  const projectionWithAuto = useMemo(() => {
-    if (!state.autoIncrease.enabled) return null;
-    return calculateProjection({
-      currentAge,
-      retirementAge,
-      currentBalance: state.currentBalance || 0,
-      monthlyContribution: derived.monthlyContribution,
-      employerMatch: state.employerMatchEnabled ? derived.employerMatchMonthly : 0,
-      annualReturnRate: state.assumptions.annualReturnRate,
-      inflationRate: state.assumptions.inflationRate,
-      autoIncrease: {
-        enabled: true,
-        initialPercentage: contributionPct,
-        increasePercentage: state.autoIncrease.percentage,
-        maxPercentage: state.autoIncrease.maxPercentage,
-        salary,
-        contributionType: "percentage",
-        assumptions: state.assumptions,
-      },
-    });
-  }, [
-    state.autoIncrease.enabled,
-    state.autoIncrease.percentage,
-    state.autoIncrease.maxPercentage,
-    contributionPct,
-    salary,
-    currentAge,
-    retirementAge,
-    state.currentBalance,
-    derived.monthlyContribution,
-    derived.employerMatchMonthly,
-    state.employerMatchEnabled,
-    state.assumptions,
-  ]);
 
   const activePreset = PRESETS.find((p) => p.percentage === contributionPct)?.id ?? null;
   const activeMatch = !state.employerMatchEnabled
@@ -232,7 +196,6 @@ export const Contribution = () => {
   };
 
   const canContinue = contributionPct > 0 && contributionPct <= 100;
-  const [showInvestmentWizard, setShowInvestmentWizard] = useState(false);
 
   const handleNext = useCallback(() => {
     if (!canContinue) return;
@@ -245,16 +208,8 @@ export const Contribution = () => {
         sourceAllocation: state.sourceAllocation,
       });
     }
-    if (state.investmentProfileCompleted) {
-      navigate("/enrollment/investments");
-    } else {
-      setShowInvestmentWizard(true);
-    }
-  }, [canContinue, contributionPct, state.sourceAllocation, state.investmentProfileCompleted, navigate]);
-
-  const handleWizardComplete = useCallback(() => {
-    setShowInvestmentWizard(false);
-  }, []);
+    navigate("/enrollment/future-contributions");
+  }, [canContinue, contributionPct, state.sourceAllocation, navigate]);
 
   const sourceTotal = state.sourceAllocation.preTax + state.sourceAllocation.roth + state.sourceAllocation.afterTax;
   const sliderPct = ((Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, contributionPct)) - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
@@ -275,7 +230,7 @@ export const Contribution = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[58%_1fr] items-start">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_1fr] items-start">
           <div className="contrib-section-card flex flex-col gap-10">
             {/* PRIMARY: How much do you wish to contribute? */}
             <section className="space-y-8">
@@ -372,7 +327,11 @@ export const Contribution = () => {
                     <span className="text-lg font-semibold text-slate-500 dark:text-slate-400 shrink-0">$</span>
                   </div>
                 </div>
-                <p className="px-4 pb-3 text-sm text-slate-500 dark:text-slate-400">
+              </div>
+
+              {/* Paycheck impact - highlighted separately */}
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-4 py-3 dark:border-emerald-800/60 dark:bg-emerald-950/40">
+                <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                   That&apos;s {formatCurrency(perPaycheck)} per paycheck.
                 </p>
               </div>
@@ -513,15 +472,15 @@ export const Contribution = () => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {SOURCE_OPTIONS.map((opt) => {
-                    const monthlyTotal = annualAmount / 12;
-                    const sourceMonthly = (state.sourceAllocation[opt.key] / 100) * monthlyTotal;
+                    const paycheckTotal = annualAmount / PAYCHECKS_PER_YEAR;
+                    const sourcePerPaycheck = (state.sourceAllocation[opt.key] / 100) * paycheckTotal;
                     const displayValue =
                       state.sourcesViewMode === "percent"
                         ? state.sourceAllocation[opt.key] > 0
                           ? state.sourceAllocation[opt.key]
                           : ""
                         : state.sourceAllocation[opt.key] > 0
-                          ? Math.round(sourceMonthly)
+                          ? Math.round(sourcePerPaycheck)
                           : "";
                     return (
                       <div key={opt.id} className="flex justify-between items-center gap-4">
@@ -578,7 +537,7 @@ export const Contribution = () => {
                             <span className="text-xs text-slate-400 dark:text-slate-500">Min 1% - Max 100%</span>
                           </div>
                         </label>
-                        <div className="flex items-center gap-1">
+                        <div className="inline-flex w-28 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white transition-colors focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-500/30">
                           <input
                             type="number"
                             value={displayValue}
@@ -587,8 +546,8 @@ export const Contribution = () => {
                               if (state.sourcesViewMode === "percent") {
                                 handleSourcePercentChange(opt.key, isNaN(v) ? 0 : v);
                               } else if (salary > 0 && !isNaN(v) && v >= 0) {
-                                const monthlyTotalVal = annualAmount / 12;
-                                const pct = monthlyTotalVal > 0 ? (v / monthlyTotalVal) * 100 : 0;
+                                const paycheckTotalVal = annualAmount / PAYCHECKS_PER_YEAR;
+                                const pct = paycheckTotalVal > 0 ? (v / paycheckTotalVal) * 100 : 0;
                                 handleSourcePercentChange(opt.key, Math.min(100, Math.max(0, pct)));
                               } else if (e.target.value === "") {
                                 handleSourcePercentChange(opt.key, 0);
@@ -597,10 +556,10 @@ export const Contribution = () => {
                             min="0"
                             max={state.sourcesViewMode === "percent" ? "100" : undefined}
                             disabled={state.sourceAllocation[opt.key] === 0 || !state.sourcesEditMode}
-                            className="w-24 min-w-[6rem] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-100 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-800"
+                            className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-100 dark:placeholder-slate-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <span className="text-sm text-slate-500 dark:text-slate-400 shrink-0">
-                            {state.sourcesViewMode === "percent" ? "%" : "/ Mo"}
+                          <span className="flex shrink-0 items-center bg-slate-100 px-3 py-2.5 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-200">
+                            {state.sourcesViewMode === "percent" ? "%" : "$"}
                           </span>
                         </div>
                       </div>
@@ -629,97 +588,11 @@ export const Contribution = () => {
               </div>
             </article>
 
-            {/* Projection + Auto-Increase: connected */}
-            <article className={`overflow-hidden rounded-xl border p-6 shadow-sm transition-colors ${
-              state.autoIncrease.enabled
-                ? "border-blue-200 bg-blue-50/30 dark:border-blue-900/50 dark:bg-blue-950/20"
-                : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/30"
-            }`}>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Projection</h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-slate-500 dark:text-slate-400">Auto-increase</span>
-                  <label className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={state.autoIncrease.enabled}
-                      onChange={(e) => setAutoIncrease({ ...state.autoIncrease, enabled: e.target.checked })}
-                      className="peer sr-only"
-                    />
-                    <span className="relative block h-full w-full rounded-full bg-slate-200 transition-colors peer-checked:bg-blue-600 dark:bg-slate-600 dark:peer-checked:bg-blue-600 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform after:content-[''] peer-checked:after:translate-x-5" />
-                  </label>
-                </div>
-              </div>
-              {state.autoIncrease.enabled && (
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
-                  <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Annual increase</label>
-                  <div className="flex gap-4 items-end">
-                    <div className="flex flex-1 items-center gap-1 min-w-0">
-                      <input
-                        type="number"
-                        value={state.autoIncrease.percentage > 0 ? state.autoIncrease.percentage : ""}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value);
-                          const pct = e.target.value === "" ? 0 : Math.min(10, Math.max(0, isNaN(v) ? 0 : v));
-                          setAutoIncrease({ ...state.autoIncrease, percentage: pct });
-                        }}
-                        placeholder="0"
-                        min="0"
-                        max="10"
-                        step="0.5"
-                        aria-label="Auto-increase percentage"
-                        className="w-full min-w-0 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                      />
-                      <span className="text-base font-semibold text-slate-700 dark:text-slate-300">%</span>
-                    </div>
-                    <div className="flex flex-1 items-center gap-1 min-w-0">
-                      <input
-                        type="number"
-                        value={
-                          salary > 0 && state.autoIncrease.percentage > 0
-                            ? ((salary * state.autoIncrease.percentage) / 100).toFixed(0)
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value);
-                          if (salary > 0 && !isNaN(v) && v >= 0) {
-                            const pct = (v / salary) * 100;
-                            setAutoIncrease({
-                              ...state.autoIncrease,
-                              percentage: Math.min(10, Math.max(0, pct)),
-                            });
-                          } else if (e.target.value === "") {
-                            setAutoIncrease({ ...state.autoIncrease, percentage: 0 });
-                          }
-                        }}
-                        placeholder="0"
-                        min="0"
-                        aria-label="Auto-increase dollar amount (first year)"
-                        className="w-full min-w-0 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-base font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                      />
-                      <span className="text-base font-semibold text-slate-700 dark:text-slate-300">$</span>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    {state.autoIncrease.percentage > 0 ? (
-                      <>
-                        Increase by {state.autoIncrease.percentage}% per year (that&apos;s {formatCurrency((salary * state.autoIncrease.percentage) / 100)} more in year 1). Cap at {state.autoIncrease.maxPercentage}%.
-                      </>
-                    ) : (
-                      "Enter a percentage or dollar amount above."
-                    )}
-                  </p>
-                </div>
-              )}
-              <div className="min-h-[200px] mt-4">
-                <ProjectionLineChart
-                  baseline={projectionBaseline.dataPoints}
-                  withAutoIncrease={projectionWithAuto?.dataPoints ?? null}
-                />
-              </div>
-              <div className="flex gap-5 mt-3 text-sm text-slate-600 dark:text-slate-400">
-                <span className="flex items-center gap-2 before:content-[''] before:w-5 before:h-0.5 before:bg-blue-500 before:rounded">Contribution only</span>
-                <span className="flex items-center gap-2 before:content-[''] before:w-5 before:h-0 before:border-b-2 before:border-dashed before:border-sky-500 before:rounded">Contribution + Annual increase</span>
+            {/* Projection */}
+            <article className="overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/30">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-4">Projection</h3>
+              <div className="min-h-[200px]">
+                <ProjectionLineChart baseline={projectionBaseline.dataPoints} />
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
                 Assumptions: {state.assumptions.annualReturnRate}% annual return, {state.assumptions.inflationRate}% inflation, retirement at age {retirementAge}.
@@ -730,7 +603,7 @@ export const Contribution = () => {
 
         <EnrollmentFooter
           step={1}
-          primaryLabel="Continue to Investments"
+          primaryLabel="Continue to Auto Increase"
           primaryDisabled={!canContinue}
           onPrimary={handleNext}
           summaryText={summaryText}
@@ -741,97 +614,120 @@ export const Contribution = () => {
           })}
         />
       </div>
-
-      {showInvestmentWizard && (
-        <InvestmentProfileWizard
-          isOpen={showInvestmentWizard}
-          onClose={handleWizardComplete}
-          onComplete={handleWizardComplete}
-        />
-      )}
     </DashboardLayout>
   );
 };
 
-function ProjectionLineChart({
-  baseline,
-  withAutoIncrease,
-}: {
-  baseline: ProjectionDataPoint[];
-  withAutoIncrease: ProjectionDataPoint[] | null;
-}) {
+const formatTooltipCurrency = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+
+function ProjectionLineChart({ baseline }: { baseline: ProjectionDataPoint[] }) {
+  const [tooltip, setTooltip] = useState<{ index: number; x: number; y: number } | null>(null);
   const points = baseline.length;
   if (points === 0) return <div className="flex items-center justify-center min-h-[160px] text-sm text-slate-500 dark:text-slate-400">No data</div>;
 
-  const maxBalance = Math.max(
-    ...baseline.map((p) => p.balance),
-    ...(withAutoIncrease ?? []).map((p) => p.balance)
-  );
+  const maxBalance = Math.max(...baseline.map((p) => p.balance));
+  const yTicks = getYAxisTicks(maxBalance);
+  const yMax = yTicks[yTicks.length - 1] ?? maxBalance;
   const minBalance = 0;
-  const range = maxBalance - minBalance || 1;
+  const range = yMax - minBalance || 1;
   const w = 400;
   const h = 200;
-  const padding = { top: 12, right: 12, bottom: 24, left: 48 };
+  const padding = { top: 20, right: 12, bottom: 32, left: 56 };
 
   const xScale = (i: number) => padding.left + (i / Math.max(0, points - 1)) * (w - padding.left - padding.right);
   const yScale = (v: number) => h - padding.bottom - ((v - minBalance) / range) * (h - padding.top - padding.bottom);
 
-  const baselinePath = baseline
+  const chartWidth = w - padding.left - padding.right;
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * w;
+    const index = Math.max(0, Math.min(points - 1, Math.round(((svgX - padding.left) / chartWidth) * (points - 1))));
+    setTooltip({ index, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  const path = baseline
     .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(i)} ${yScale(p.balance)}`)
     .join(" ");
 
-  const autoPath =
-    withAutoIncrease &&
-    withAutoIncrease
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(i)} ${yScale(p.balance)}`)
-      .join(" ");
+  const areaPath = `${path} L ${xScale(points - 1)} ${h - padding.bottom} L ${padding.left} ${h - padding.bottom} Z`;
 
   const currentYear = new Date().getFullYear();
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[200px] block" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <linearGradient id="contrib-chart-gradient-baseline" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="contrib-chart-gradient-auto" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        d={`${baselinePath} L ${xScale(points - 1)} ${h - padding.bottom} L ${padding.left} ${h - padding.bottom} Z`}
-        fill="url(#contrib-chart-gradient-baseline)"
-      />
-      <path d={baselinePath} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {autoPath && (
-        <>
-          <path
-            d={`${autoPath} L ${xScale((withAutoIncrease?.length ?? 1) - 1)} ${h - padding.bottom} L ${padding.left} ${h - padding.bottom} Z`}
-            fill="url(#contrib-chart-gradient-auto)"
+    <div className="relative">
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="contrib-chart block w-full"
+        preserveAspectRatio="xMidYMid meet"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setTooltip(null)}
+      >
+        <defs>
+          <linearGradient id="contrib-chart-gradient-baseline" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Horizontal grid lines */}
+        {yTicks.map((v, i) => (
+          <line
+            key={i}
+            x1={padding.left}
+            y1={yScale(v)}
+            x2={w - padding.right}
+            y2={yScale(v)}
+            className="contrib-chart-grid-line"
+            strokeDasharray="3 3"
+            strokeWidth="1"
           />
-          <path
-            d={autoPath}
-            fill="none"
-            stroke="#0ea5e9"
-            strokeWidth="2.5"
-            strokeDasharray="6 4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </>
-      )}
-      {baseline.length > 0 && (
-        <g fill="currentColor" className="text-slate-500 dark:text-slate-400">
-          <text x={xScale(0)} y={h - 6} textAnchor="start" fontSize="10">
+        ))}
+
+        {/* Y-axis labels */}
+        <g fill="currentColor" className="contrib-chart-axis-text">
+          {yTicks.map((v, i) => (
+            <text key={i} x={padding.left - 8} y={yScale(v)} textAnchor="end" dominantBaseline="middle" fontSize="10">
+              {formatYAxisLabel(v)}
+            </text>
+          ))}
+        </g>
+
+        {/* X-axis labels */}
+        <g fill="currentColor" className="contrib-chart-axis-text">
+          <text x={xScale(0)} y={h - 10} textAnchor="start" fontSize="10">
             {currentYear}
           </text>
-          <text x={xScale(baseline.length - 1)} y={h - 6} textAnchor="end" fontSize="10">
+          <text x={xScale(baseline.length - 1)} y={h - 10} textAnchor="end" fontSize="10">
             {currentYear + baseline[baseline.length - 1].year}
           </text>
         </g>
+
+        {/* Axis labels */}
+        <text x={padding.left - 8} y={14} textAnchor="end" fontSize="9" className="contrib-chart-axis-label">
+          Projected Balance
+        </text>
+        <text x={(padding.left + w - padding.right) / 2} y={h - 4} textAnchor="middle" fontSize="9" className="contrib-chart-axis-label">
+          Years
+        </text>
+
+        <path d={areaPath} fill="url(#contrib-chart-gradient-baseline)" />
+        <path d={path} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {tooltip && (
+        <div
+          className="pointer-events-none absolute z-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:shadow-black/50"
+          style={{ left: tooltip.x + 12, top: tooltip.y + 12, transform: "translate(0, -50%)" }}
+        >
+          <div className="font-medium text-slate-900 dark:text-slate-100">
+            Year {new Date().getFullYear() + baseline[tooltip.index].year}
+          </div>
+          <div className="text-blue-600 dark:text-blue-400">
+            {formatTooltipCurrency(baseline[tooltip.index].balance)}
+          </div>
+        </div>
       )}
-    </svg>
+    </div>
   );
 }

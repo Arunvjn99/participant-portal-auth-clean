@@ -13,6 +13,7 @@ import { PlanDetailManagement } from "../pages/enrollment/PlanDetailManagement";
 import { ChoosePlan } from "../pages/enrollment/ChoosePlan";
 import { PlansPage } from "../pages/enrollment/PlansPage";
 import { Contribution } from "../pages/enrollment/Contribution";
+import { FutureContributions } from "../pages/enrollment/FutureContributions";
 import { TransactionsHub } from "../pages/transactions/TransactionsHub";
 import { TransactionAnalysis } from "../pages/transactions/TransactionAnalysis";
 import { TransactionApplicationRouter } from "../pages/transactions/applications/TransactionApplicationRouter";
@@ -93,6 +94,10 @@ export const router = createBrowserRouter([
           {
             path: "contribution",
             element: <Contribution />,
+          },
+          {
+            path: "future-contributions",
+            element: <FutureContributions />,
           },
           {
             path: "investments",

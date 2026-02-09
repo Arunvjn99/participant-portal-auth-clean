@@ -16,13 +16,14 @@ const SOURCE_LABELS: Record<SourceKey, string> = {
 interface SourceAccordionProps {
   source: SourceKey;
   embedded?: boolean;
+  defaultExpanded?: boolean;
 }
 
 /**
  * Per-source accordion - Pre-tax, Roth, or After-tax.
- * Shows fund list with allocation controls when edit enabled.
+ * Figma 293-840: expandable sections with fund list, Add Investment, Total Allocation.
  */
-export const SourceAccordion = ({ source, embedded }: SourceAccordionProps) => {
+export const SourceAccordion = ({ source, embedded, defaultExpanded = false }: SourceAccordionProps) => {
   const {
     getFundsForSource,
     updateSourceAllocation,
@@ -30,7 +31,7 @@ export const SourceAccordion = ({ source, embedded }: SourceAccordionProps) => {
     removeFundFromSource,
     editAllocationEnabled,
   } = useInvestment();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showFundSearch, setShowFundSearch] = useState(false);
   const lastAddedFundIdRef = useRef<string | null>(null);
 
@@ -90,10 +91,13 @@ export const SourceAccordion = ({ source, embedded }: SourceAccordionProps) => {
           <div className="source-accordion__actions source-accordion__actions--top">
             <button
               type="button"
-              className="source-accordion__add-btn source-accordion__add-btn--primary"
+              className="source-accordion__add-btn source-accordion__add-btn--primary source-accordion__add-btn--with-icon"
               onClick={() => setShowFundSearch(true)}
             >
-              + Add Investment
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+              </svg>
+              <span>Add Investment</span>
             </button>
           </div>
         )}
@@ -102,31 +106,36 @@ export const SourceAccordion = ({ source, embedded }: SourceAccordionProps) => {
             const fund = getFundById(fa.fundId);
             if (!fund) return null;
             return (
-              <FundAllocationRow
-                key={fa.fundId}
-                fund={fund}
-                allocation={{ fundId: fa.fundId, percentage: fa.allocationPercent }}
-                disabled={!editAllocationEnabled}
-                onAllocationChange={(pct) =>
-                  updateSourceAllocation(source, fa.fundId, pct)
-                }
-                onRemove={
-                  editAllocationEnabled
-                    ? () => removeFundFromSource(source, fa.fundId)
-                    : undefined
-                }
-              />
+              <div key={fa.fundId} className="source-accordion__fund-card">
+                <FundAllocationRow
+                  fund={fund}
+                  allocation={{ fundId: fa.fundId, percentage: fa.allocationPercent }}
+                  disabled={!editAllocationEnabled}
+                  onAllocationChange={(pct) =>
+                    updateSourceAllocation(source, fa.fundId, pct)
+                  }
+                  onRemove={
+                    editAllocationEnabled
+                      ? () => removeFundFromSource(source, fa.fundId)
+                      : undefined
+                  }
+                />
+              </div>
             );
           })}
+        </div>
+        <div className={`source-accordion__total-line ${isValid ? "" : "source-accordion__total-line--invalid"}`}>
+          <span className="source-accordion__total-label">Total Allocation:</span>
+          <span className="source-accordion__total-value">{total.toFixed(1)}%</span>
         </div>
         {isValid ? (
           <div className="source-accordion__success" role="status">
             <span className="source-accordion__success-icon">✓</span>
-            <span>Total Allocation: {total.toFixed(1)}% Perfect! Your allocation is complete.</span>
+            <span>Perfect! Your allocation is complete.</span>
           </div>
         ) : (
           <p className="source-accordion__error" role="alert">
-            Total Allocation: {total.toFixed(1)}% — Allocation must total exactly 100%
+            Allocation must total exactly 100%
           </p>
         )}
       </div>

@@ -66,7 +66,7 @@ interface EnrollmentContextValue {
   setSourceAllocation: (alloc: { preTax: number; roth: number; afterTax: number }) => void;
   setSourcesEditMode: (enabled: boolean) => void;
   setSourcesViewMode: (mode: "percent" | "dollar") => void;
-  setAutoIncrease: (settings: AutoIncreaseSettings) => void;
+  setAutoIncrease: (settings: Partial<AutoIncreaseSettings>) => void;
   setInvestmentProfile: (profile: InvestmentProfile) => void;
   setInvestmentProfileCompleted: (completed: boolean) => void;
 
@@ -121,8 +121,12 @@ export const EnrollmentProvider = ({
     sourcesViewMode: "percent",
     autoIncrease: {
       enabled: false,
-      percentage: 1,
+      percentage: 2,
       maxPercentage: 15,
+      incrementCycle: "calendar_year",
+      preTaxIncrease: 2,
+      rothIncrease: 2,
+      afterTaxIncrease: 2,
     },
     assumptions: {
       employerMatchPercentage: 100,
@@ -184,7 +188,7 @@ export const EnrollmentProvider = ({
     setSourceAllocation: (alloc) => setState((prev) => ({ ...prev, sourceAllocation: alloc })),
     setSourcesEditMode: (enabled) => setState((prev) => ({ ...prev, sourcesEditMode: enabled })),
     setSourcesViewMode: (mode) => setState((prev) => ({ ...prev, sourcesViewMode: mode })),
-    setAutoIncrease: (settings) => setState((prev) => ({ ...prev, autoIncrease: settings })),
+    setAutoIncrease: (settings) => setState((prev) => ({ ...prev, autoIncrease: { ...prev.autoIncrease, ...settings } })),
     setInvestmentProfile: (profile) => setState((prev) => ({ ...prev, investmentProfile: profile })),
     setInvestmentProfileCompleted: (completed) =>
       setState((prev) => ({ ...prev, investmentProfileCompleted: completed })),

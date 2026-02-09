@@ -11,9 +11,9 @@ interface EnrollmentStepperProps {
  * Circular progress ring (green arc, gray track), "X / Y" in center, optional title/subtitle to the right.
  */
 export const EnrollmentStepper = ({ currentStep, title, subtitle }: EnrollmentStepperProps) => {
-  const stepIndex = Math.min(Math.max(currentStep, 0), 3);
+  const stepIndex = Math.min(Math.max(currentStep, 0), 4);
   const currentStepNum = stepIndex + 1;
-  const totalSteps = 4;
+  const totalSteps = 5;
   const progressFraction = currentStepNum / totalSteps;
   const circumference = 2 * Math.PI * 36;
   const strokeDashoffset = circumference - progressFraction * circumference;

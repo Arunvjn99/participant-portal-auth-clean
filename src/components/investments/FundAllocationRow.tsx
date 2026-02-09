@@ -1,4 +1,3 @@
-import { Input } from "../ui/Input";
 import type { Fund, Allocation } from "../../types/investment";
 
 interface FundAllocationRowProps {
@@ -76,52 +75,55 @@ export const FundAllocationRow = ({
         </div>
       </div>
       <div className="fund-allocation-row__controls">
-        <div className="fund-allocation-row__slider-wrapper">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="0.1"
-            value={allocation.percentage}
-            onChange={handleSliderChange}
-            disabled={disabled}
-            className="fund-allocation-row__slider"
-            aria-label={`Allocation for ${fund.name}`}
-            style={
-              {
-                "--slider-pct": `${allocation.percentage}%`,
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <div className="fund-allocation-row__input-row">
-          <div className="fund-allocation-row__input-wrapper">
-            <Input
-              label="Allocation %"
-              type="number"
-              name={`allocation-${fund.id}`}
-              value={allocation.percentage > 0 ? formatPercentage(allocation.percentage) : ""}
-              onChange={handleInputChange}
+        <div className="fund-allocation-row__controls-stack">
+          <div className="fund-allocation-row__input-row">
+            <div className="fund-allocation-row__input-wrapper">
+              <input
+                type="number"
+                name={`allocation-${fund.id}`}
+                value={allocation.percentage > 0 ? formatPercentage(allocation.percentage) : ""}
+                onChange={handleInputChange}
+                min="0"
+                max="100"
+                step="0.1"
+                disabled={disabled}
+                placeholder=""
+                className="fund-allocation-row__input"
+                aria-label={`Allocation for ${fund.name}`}
+              />
+              <span className="fund-allocation-row__input-suffix">%</span>
+            </div>
+            {onRemove && (
+              <button
+                type="button"
+                onClick={onRemove}
+                className="fund-allocation-row__remove fund-allocation-row__remove--desktop"
+                aria-label={`Remove ${fund.name}`}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
+          </div>
+          <div className="fund-allocation-row__slider-wrapper">
+            <input
+              type="range"
               min="0"
               max="100"
               step="0.1"
+              value={allocation.percentage}
+              onChange={handleSliderChange}
               disabled={disabled}
-              suffix="%"
-              className="fund-allocation-row__input"
+              className="fund-allocation-row__slider"
+              aria-label={`Allocation for ${fund.name}`}
+              style={
+                {
+                  "--slider-pct": `${allocation.percentage}%`,
+                } as React.CSSProperties
+              }
             />
           </div>
-          {onRemove && (
-            <button
-              type="button"
-              onClick={onRemove}
-              className="fund-allocation-row__remove fund-allocation-row__remove--desktop"
-              aria-label={`Remove ${fund.name}`}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-          )}
         </div>
       </div>
     </div>

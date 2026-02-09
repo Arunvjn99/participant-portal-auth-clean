@@ -66,7 +66,7 @@ export const DashboardHeader = () => {
 
   return (
     <div className="flex h-full w-full items-center">
-      <div className="flex h-full w-full max-w-[1200px] flex-1 items-center justify-between gap-4 px-4 sm:px-6 mx-auto">
+      <div className="flex h-full w-full max-w-[1440px] flex-1 items-center justify-between gap-4 px-6 lg:px-8 mx-auto">
         {/* Brand */}
         <div className="flex shrink-0 items-center gap-3">
           <img

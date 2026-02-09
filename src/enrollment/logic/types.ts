@@ -63,10 +63,17 @@ export interface ProjectionComparison {
   withAutoIncrease: ProjectionResult;
 }
 
+export type IncrementCycle = "calendar_year" | "plan_enroll_date" | "plan_year";
+
 export interface AutoIncreaseSettings {
   enabled: boolean;
-  percentage: number; // Annual increase percentage
+  percentage: number; // Annual increase percentage (e.g., 2 = 2% per year)
   maxPercentage: number; // Maximum contribution percentage cap
+  incrementCycle: IncrementCycle;
+  /** Per-source increase (2 = 2% or $2/mo depending on view mode) */
+  preTaxIncrease: number;
+  rothIncrease: number;
+  afterTaxIncrease: number;
 }
 
 export interface ContributionAssumptions {

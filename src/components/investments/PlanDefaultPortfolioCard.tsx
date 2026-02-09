@@ -1,13 +1,5 @@
 import { DashboardCard } from "../dashboard/DashboardCard";
 
-/** Lock icon for edit toggle */
-const LockIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-    <rect x="4" y="8" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="2" />
-    <path d="M6 8V5a4 4 0 118 0v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
 /** Filter icon for header */
 const FilterIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -20,19 +12,12 @@ const FilterIcon = () => (
   </svg>
 );
 
-interface PlanDefaultPortfolioCardProps {
-  editAllocationEnabled?: boolean;
-  onEditToggleChange?: (enabled: boolean) => void;
-}
-
 /**
  * Plan Default Portfolio card - Figma design
- * Shows recommended strategy with MODERATE INVESTOR badge, info banner, metrics, and edit toggle
+ * Shows recommended strategy with MODERATE INVESTOR badge, info banner, metrics.
+ * Edit toggle moved to FUND ALLOCATION section (Figma 293-840).
  */
-export const PlanDefaultPortfolioCard = ({
-  editAllocationEnabled = false,
-  onEditToggleChange,
-}: PlanDefaultPortfolioCardProps) => {
+export const PlanDefaultPortfolioCard = () => {
   return (
     <DashboardCard>
       <div className="flex flex-col gap-4">
@@ -90,33 +75,6 @@ export const PlanDefaultPortfolioCard = ({
             </span>
           </div>
         </div>
-
-        {onEditToggleChange && (
-          <>
-            <div className="flex items-center gap-3">
-              <span className="text-muted-foreground" aria-hidden="true">
-                <LockIcon />
-              </span>
-              <label className="flex flex-1 cursor-pointer items-center justify-between gap-4">
-                <span className="font-semibold text-foreground">Allow me to edit allocation</span>
-                <div className="relative h-6 w-12 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={editAllocationEnabled}
-                    onChange={(e) => onEditToggleChange(e.target.checked)}
-                    className="peer sr-only"
-                    role="switch"
-                  />
-                  <span className="absolute inset-0 rounded-full bg-slate-200 transition-colors peer-checked:bg-blue-500 dark:bg-slate-600 peer-checked:dark:bg-blue-600" />
-                  <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-6 dark:bg-slate-100" />
-                </div>
-              </label>
-            </div>
-            <p className="m-0 text-sm text-muted-foreground">
-              Enable to customize recommended allocations and add investments
-            </p>
-          </>
-        )}
       </div>
     </DashboardCard>
   );

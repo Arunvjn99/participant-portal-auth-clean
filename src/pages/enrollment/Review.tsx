@@ -11,8 +11,9 @@ import { getFundById } from "../../data/mockFunds";
 import Button from "../../components/ui/Button";
 import { EnrollmentFooter } from "../../components/enrollment/EnrollmentFooter";
 import { AIAdvisorModal } from "../../components/enrollment/AIAdvisorModal";
+import { SuccessEnrollmentModal } from "../../components/enrollment/SuccessEnrollmentModal";
 import type { SelectedPlanId } from "../../enrollment/context/EnrollmentContext";
-import type { ContributionSource } from "../../enrollment/logic/types";
+import type { ContributionSource, IncrementCycle } from "../../enrollment/logic/types";
 
 const PLAN_NAMES: Record<SelectedPlanId, string> = {
   traditional_401k: "Traditional 401(k)",
@@ -32,6 +33,12 @@ const SOURCE_NAMES: Record<ContributionSource, string> = {
   preTax: "Pre-tax",
   roth: "Roth",
   afterTax: "After-tax",
+};
+
+const INCREMENT_CYCLE_LABELS: Record<IncrementCycle, string> = {
+  calendar_year: "Calendar Year",
+  plan_enroll_date: "Plan Enroll Date",
+  plan_year: "Plan Year",
 };
 
 function getAssetClassLabel(ac: string): string {
@@ -58,8 +65,8 @@ export const Review = () => {
     feeDisclosure: false,
     qdefault: false,
   });
-  const [autoRebalance, setAutoRebalance] = useState(false);
   const [showAdvisorModal, setShowAdvisorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -342,6 +349,77 @@ export const Review = () => {
               </button>
             </DashboardCard>
 
+            {/* Auto Increase */}
+            <DashboardCard
+              title="Auto Increase"
+              action={
+                <button type="button" onClick={() => navigate("/enrollment/future-contributions")} className="border-0 bg-transparent p-0 text-sm font-medium text-blue-600 cursor-pointer font-inherit hover:underline dark:text-blue-400">
+                  Edit
+                </button>
+              }
+            >
+              {(() => {
+                const ai = enrollment.state.autoIncrease;
+                const formatPct = (pct: number) => (pct > 0 ? `${pct}%` : "—");
+                const hasAnyIncrease = (ai.preTaxIncrease ?? 0) > 0 || (ai.rothIncrease ?? 0) > 0 || (ai.afterTaxIncrease ?? 0) > 0;
+                if (!hasAnyIncrease) {
+                  return (
+                    <p className="m-0 text-[0.9375em] text-slate-600 dark:text-slate-400">
+                      Automatic annual increase is not configured.
+                    </p>
+                  );
+                }
+                return (
+                  <>
+                    <div className="mb-4">
+                      <span className="text-[0.8125em] font-medium text-muted-foreground">Increment cycle</span>
+                      <p className="m-0 mt-1 text-[0.9375em] font-medium text-foreground">
+                        {INCREMENT_CYCLE_LABELS[ai.incrementCycle]}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="relative flex flex-col rounded-lg border border-border bg-card p-5">
+                        <span className="mb-3 text-[0.9375em] font-normal text-slate-700 dark:text-slate-200">Pre-tax</span>
+                        <button type="button" className="absolute top-2 right-2 p-1 bg-transparent border-0 text-slate-400 cursor-pointer leading-none hover:text-blue-500 dark:hover:text-blue-400" aria-label="Edit Pre-tax increase" onClick={() => navigate("/enrollment/future-contributions")}>
+                          <PencilIcon />
+                        </button>
+                        <div className="flex flex-1 flex-col items-center justify-center gap-0.5">
+                          <div className={`text-2xl font-bold ${(ai.preTaxIncrease ?? 0) > 0 ? "text-foreground" : "text-slate-400 dark:text-slate-500"}`}>
+                            {formatPct(ai.preTaxIncrease ?? 0)}
+                          </div>
+                          <div className="text-[0.8125em] font-normal text-muted-foreground">per year</div>
+                        </div>
+                      </div>
+                      <div className="relative flex flex-col rounded-lg border border-border bg-card p-5">
+                        <span className="mb-3 text-[0.9375em] font-normal text-slate-700 dark:text-slate-200">Roth</span>
+                        <button type="button" className="absolute top-2 right-2 p-1 bg-transparent border-0 text-slate-400 cursor-pointer leading-none hover:text-blue-500 dark:hover:text-blue-400" aria-label="Edit Roth increase" onClick={() => navigate("/enrollment/future-contributions")}>
+                          <PencilIcon />
+                        </button>
+                        <div className="flex flex-1 flex-col items-center justify-center gap-0.5">
+                          <div className={`text-2xl font-bold ${(ai.rothIncrease ?? 0) > 0 ? "text-foreground" : "text-slate-400 dark:text-slate-500"}`}>
+                            {formatPct(ai.rothIncrease ?? 0)}
+                          </div>
+                          <div className="text-[0.8125em] font-normal text-muted-foreground">per year</div>
+                        </div>
+                      </div>
+                      <div className="relative flex flex-col rounded-lg border border-border bg-card p-5 sm:col-span-2 lg:col-span-1">
+                        <span className="mb-3 text-[0.9375em] font-normal text-slate-700 dark:text-slate-200">After-tax</span>
+                        <button type="button" className="absolute top-2 right-2 p-1 bg-transparent border-0 text-slate-400 cursor-pointer leading-none hover:text-blue-500 dark:hover:text-blue-400" aria-label="Edit After-tax increase" onClick={() => navigate("/enrollment/future-contributions")}>
+                          <PencilIcon />
+                        </button>
+                        <div className="flex flex-1 flex-col items-center justify-center gap-0.5">
+                          <div className={`text-2xl font-bold ${(ai.afterTaxIncrease ?? 0) > 0 ? "text-foreground" : "text-slate-400 dark:text-slate-500"}`}>
+                            {formatPct(ai.afterTaxIncrease ?? 0)}
+                          </div>
+                          <div className="text-[0.8125em] font-normal text-muted-foreground">per year</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </DashboardCard>
+
             {/* Investment Elections - unified table, not split by source */}
             <DashboardCard
               title="Investment Elections"
@@ -497,14 +575,6 @@ export const Review = () => {
                   <span className="text-sm text-muted-foreground">{formatRiskLevel(weightedSummary.riskLevel ?? 0)}</span>
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm my-2 cursor-pointer">
-                <span className="relative inline-block w-11 h-6">
-                  <input type="checkbox" checked={autoRebalance} onChange={(e) => setAutoRebalance(e.target.checked)} className="sr-only peer" />
-                  <span className="absolute inset-0 rounded-full bg-slate-200 dark:bg-slate-600 transition-colors peer-checked:bg-blue-500 peer-checked:dark:bg-blue-600" />
-                  <span className="absolute left-0.5 bottom-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5 dark:bg-slate-100" />
-                </span>
-                Auto Rebalance
-              </label>
               <Button type="button" disabled={!isAllocationValid} className="w-full mt-2">
                 Confirm Allocation
               </Button>
@@ -535,16 +605,15 @@ export const Review = () => {
 
         {/* Full-width sections per Figma - Legal Documents, What Happens Next */}
         <div className="flex flex-col gap-6 w-full md:gap-8">
-          {/* Important Legal Documents */}
+          {/* Terms and Conditions */}
           <DashboardCard>
             <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground mb-2">
               <svg className="shrink-0 text-muted-foreground" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              Important Legal Documents
+              Terms and Conditions
             </h3>
-            <p className="text-sm text-muted-foreground mb-1">3 documents available - <span className="text-red-500 dark:text-red-400 font-medium">2 required</span></p>
             <p className="flex items-start gap-2 text-sm text-muted-foreground mb-4">
               <svg className="shrink-0 mt-0.5 text-slate-400 dark:text-slate-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              Please acknowledge all required documents to enable enrollment.
+              Please accept the terms and conditions to enable enrollment.
             </p>
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -608,18 +677,29 @@ export const Review = () => {
           </p>
         )}
         <EnrollmentFooter
-          step={3}
+          step={4}
           primaryLabel="Confirm & Submit"
           primaryDisabled={!canEnroll}
           onPrimary={() => {
             if (!canEnroll) return;
-            navigate("/dashboard/post-enrollment");
+            setShowSuccessModal(true);
           }}
           summaryText={!isAllocationValid ? "Allocation must total 100%" : "Ready to submit"}
           summaryError={!isAllocationValid}
           getDraftSnapshot={() => ({ investment: investment.getInvestmentSnapshot() })}
         />
         <AIAdvisorModal open={showAdvisorModal} onClose={() => setShowAdvisorModal(false)} />
+        <SuccessEnrollmentModal
+          open={showSuccessModal}
+          onClose={() => {
+            setShowSuccessModal(false);
+            navigate("/dashboard/post-enrollment");
+          }}
+          onViewPlanDetails={() => {
+            setShowSuccessModal(false);
+            navigate("/dashboard/post-enrollment");
+          }}
+        />
       </div>
     </DashboardLayout>
   );

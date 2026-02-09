@@ -4,7 +4,6 @@ import { DashboardCard } from "../dashboard/DashboardCard";
 import Button from "../ui/Button";
 import { AllocationChart } from "./AllocationChart";
 import { useInvestment } from "../../context/InvestmentContext";
-import { ConfirmAllocationModal } from "./ConfirmAllocationModal";
 import { AdvisorHelpWizard } from "./AdvisorHelpWizard";
 
 type AllocationSummaryVariant = "enrollment" | "dashboard";
@@ -28,23 +27,12 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
     canConfirmAllocation,
     confirmAllocation,
   } = useInvestment();
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAdvisorWizard, setShowAdvisorWizard] = useState(false);
-  const [autoRebalance, setAutoRebalance] = useState(false);
 
   const handleConfirmClick = () => {
-    setShowConfirmModal(true);
-  };
-
-  const handleConfirmAllocation = () => {
     if (!canConfirmAllocation) return;
     confirmAllocation();
-    setShowConfirmModal(false);
     navigate("/enrollment/review");
-  };
-
-  const formatPercentage = (value: number) => {
-    return value.toFixed(2);
   };
 
   const formatRiskLevel = (risk: number) => {
@@ -54,8 +42,6 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
     return "Aggressive";
   };
 
-  const expReturnLow = (weightedSummary.expectedReturn * 0.9).toFixed(1);
-  const expReturnHigh = (weightedSummary.expectedReturn * 1.1).toFixed(1);
   const riskPercent = Math.min(100, (weightedSummary.riskLevel / 10) * 100);
 
   const totalAllocation = chartAllocations.reduce((s, a) => s + a.percentage, 0);
@@ -70,15 +56,6 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
                 <h3 className="allocation-summary__title">Allocation Summary</h3>
                 <p className="allocation-summary__subtitle">Real-time impact of your elections.</p>
               </div>
-              <label className="allocation-summary__auto-rebalance">
-                <input
-                  type="checkbox"
-                  checked={autoRebalance}
-                  onChange={(e) => setAutoRebalance(e.target.checked)}
-                  className="allocation-summary__auto-rebalance-input"
-                />
-                <span className="allocation-summary__auto-rebalance-text">Auto-rebalance</span>
-              </label>
             </div>
 
             <div className="allocation-summary__chart">
@@ -89,33 +66,6 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
                 showValidBadge
                 isValid={weightedSummary.isValid}
               />
-            </div>
-
-            <div className="allocation-summary__metrics">
-              <div className="allocation-summary__metric">
-                <span className="allocation-summary__metric-label">
-                  <svg className="allocation-summary__metric-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                    <polyline points="17 6 23 6 23 12" />
-                  </svg>
-                  Exp. Return
-                </span>
-                <span className="allocation-summary__metric-value allocation-summary__metric-value--success">
-                  {expReturnLow}% - {expReturnHigh}%
-                </span>
-              </div>
-              <div className="allocation-summary__metric">
-                <span className="allocation-summary__metric-label">
-                  <svg className="allocation-summary__metric-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
-                  Est. Fees
-                </span>
-                <span className="allocation-summary__metric-value">
-                  {formatPercentage(weightedSummary.totalFees)}% / yr
-                </span>
-              </div>
             </div>
 
             <div className="allocation-summary__risk-meter">
@@ -181,13 +131,6 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
         </div>
       </div>
 
-      {showConfirmModal && (
-        <ConfirmAllocationModal
-          onConfirm={handleConfirmAllocation}
-          onCancel={() => setShowConfirmModal(false)}
-          canConfirm={canConfirmAllocation}
-        />
-      )}
       <AdvisorHelpWizard
         open={showAdvisorWizard}
         onClose={() => setShowAdvisorWizard(false)}

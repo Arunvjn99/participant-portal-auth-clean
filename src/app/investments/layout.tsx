@@ -19,7 +19,7 @@ export default function InvestmentsLayout({ children }: InvestmentsLayoutProps) 
       <div className="investments-layout">
         <div className="enrollment-stepper-section investments-layout__stepper">
           <EnrollmentStepper
-            currentStep={2}
+            currentStep={3}
             title="Investment Elections"
             subtitle="Choose how your contributions are invested."
           />

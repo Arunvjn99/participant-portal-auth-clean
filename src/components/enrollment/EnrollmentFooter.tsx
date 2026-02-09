@@ -6,7 +6,7 @@ import {
   ENROLLMENT_SAVED_TOAST_KEY,
 } from "../../enrollment/enrollmentDraftStore";
 
-export type EnrollmentStep = 0 | 1 | 2 | 3;
+export type EnrollmentStep = 0 | 1 | 2 | 3 | 4;
 
 interface EnrollmentFooterProps {
   step: EnrollmentStep;
@@ -47,6 +47,9 @@ export const EnrollmentFooter = ({
         navigate("/enrollment/contribution");
         break;
       case 3:
+        navigate("/enrollment/future-contributions");
+        break;
+      case 4:
         navigate("/enrollment/investments");
         break;
     }
