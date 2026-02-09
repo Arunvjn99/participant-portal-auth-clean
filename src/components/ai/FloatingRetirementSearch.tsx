@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { detectIntent, generateResponse, type AIResponse } from "../../utils/aiIntentDetection";
+import { getResponseForQuery, type AIResponse } from "../../utils/aiIntentDetection";
 
 // Optional enrollment context
 const useEnrollmentSafe = () => {
@@ -72,8 +72,9 @@ export const FloatingRetirementSearch = () => {
     const currentQuery = query.trim();
     setQuery("");
     setIsLoading(true);
-    const intent = detectIntent(currentQuery, userContext);
-    const aiResponse = generateResponse(intent, currentQuery, userContext);
+    // Brief delay for "Thinking..." UX
+    await new Promise((r) => setTimeout(r, 400));
+    const aiResponse = getResponseForQuery(currentQuery, userContext);
     setResponse(aiResponse);
     setIsLoading(false);
     setTimeout(() => inputRef.current?.focus(), 100);
@@ -99,16 +100,14 @@ export const FloatingRetirementSearch = () => {
   return (
     <>
       {/* Collapsed trigger - "Ask Bella" pill button (Figma 522-6066) */}
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="floating-retirement-search-trigger fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-2 rounded-full px-5 py-3 text-white shadow-lg hover:opacity-95 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-        style={{
-          background: "linear-gradient(90deg, #5EEAD4 0%, #14B8A6 50%, #0D9488 100%)",
-        }}
-        aria-label="Ask Bella - Retirement Assistant"
-        aria-expanded={isExpanded}
-      >
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000]">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="floating-retirement-search-trigger flex items-center gap-2 rounded-full px-5 py-3 bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white shadow-lg animate-bella-pulse hover:scale-105 hover:animate-none active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background dark:from-teal-500 dark:via-teal-600 dark:to-teal-700"
+          aria-label="Ask Bella - Retirement Assistant"
+          aria-expanded={isExpanded}
+        >
         {/* Bella avatar icon */}
         <img
           src="/image/bella-icon.png"
@@ -119,7 +118,8 @@ export const FloatingRetirementSearch = () => {
           aria-hidden
         />
         <span className="font-semibold text-sm">Ask Bella</span>
-      </button>
+        </button>
+      </div>
 
       {/* Backdrop overlay - panel floats above page content */}
       {isExpanded && (
@@ -140,14 +140,33 @@ export const FloatingRetirementSearch = () => {
         >
           {/* Header - Figma: AI Assistant Online */}
           <div className="p-4 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" aria-hidden />
-              <span className="text-sm text-slate-400">AI Assistant Online</span>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" aria-hidden />
+                <span className="text-sm text-slate-400">AI Assistant Online</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/voice", { state: { from: location.pathname } });
+                  setIsExpanded(false);
+                }}
+                className="flex items-center gap-2 rounded-full px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium hover:from-teal-600 hover:to-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-[#1B2232]"
+                aria-label="Open Voice Mode"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+                <span>Voice mode</span>
+              </button>
             </div>
             <h2 className="text-xl font-bold text-white mt-2">What would you like to do today?</h2>
           </div>
 
-          {/* Search input - pill shape with mic button (Figma 522-6410) */}
+          {/* Search input - pill shape with send button (Figma 522-6410) */}
           <form onSubmit={handleSubmit} className="px-4 pb-4">
             <div className="flex gap-0 rounded-full bg-[#2C3549] dark:bg-slate-800 overflow-hidden border border-slate-600/50">
               <input
@@ -167,13 +186,11 @@ export const FloatingRetirementSearch = () => {
                 disabled={!query.trim() || isLoading}
                 className="flex h-11 w-11 shrink-0 items-center justify-center bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity rounded-r-full"
                 aria-label="Send"
-                title="Send or use voice"
+                title="Send"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
               </button>
             </div>
@@ -228,7 +245,13 @@ export const FloatingRetirementSearch = () => {
             )}
             {!isLoading && response && (
               <div className="rounded-lg bg-[#2C3549] dark:bg-slate-800 p-3 text-sm text-slate-200 space-y-2">
+                {response.dataSnippet && (
+                  <p className="text-emerald-400/90 font-medium">{response.dataSnippet}</p>
+                )}
                 <p>{response.answer}</p>
+                {response.disclaimer && (
+                  <p className="text-xs text-slate-500 italic">{response.disclaimer}</p>
+                )}
                 {response.primaryAction && (
                   <div className="flex gap-2 pt-2">
                     <button

@@ -3,6 +3,8 @@
  * Mocked AI logic for search, Q&A, and action launching
  */
 
+import { getMockResponseForQuery } from "../data/bellaMockResponses";
+
 export type UserIntent =
   | "explain_retirement_plans"
   | "calculate_contributions"
@@ -130,6 +132,28 @@ export const detectIntent = (query: string, context: UserContext): UserIntent =>
 };
 
 /**
+ * Get AI response for a query. Uses intent detection first, then mock keyword fallback.
+ */
+export const getResponseForQuery = (query: string, context: UserContext): AIResponse => {
+  const intent = detectIntent(query, context);
+  const response = generateResponse(intent, query, context);
+
+  // If unknown, try mock keyword matching for broader coverage
+  if (intent === "unknown") {
+    const mock = getMockResponseForQuery(query);
+    if (mock) {
+      return {
+        answer: mock.answer,
+        primaryAction: mock.primaryAction,
+        secondaryAction: mock.secondaryAction,
+      };
+    }
+  }
+
+  return response;
+};
+
+/**
  * Generate AI response based on intent and context
  */
 export const generateResponse = (intent: UserIntent, query: string, context: UserContext): AIResponse => {
@@ -180,11 +204,11 @@ export const generateResponse = (intent: UserIntent, query: string, context: Use
       };
 
     case "search_contribution":
+      const pct = context.contributionAmount ?? 5;
+      const monthly = Math.round((pct / 100) * 75000 / 12);
       return {
-        answer: `Your current contribution is ${context.contributionAmount}% of your salary.`,
-        dataSnippet: context.isEnrolled
-          ? `Monthly contribution: $${Math.round((context.contributionAmount / 100) * 75000 / 12)}`
-          : undefined,
+        answer: `Your current contribution is ${pct}% of your salary${pct > 0 ? ` (about $${monthly}/month)` : ""}.`,
+        dataSnippet: undefined,
         primaryAction: context.isEnrolled
           ? {
               label: "Manage Contribution",
