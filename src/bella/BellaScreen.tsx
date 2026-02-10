@@ -3611,7 +3611,7 @@ Focus ONLY on US retirement topics.`
                   onEditRetirementAge={() => handleUserInput("edit retirement age", "chip")}
                   onEditRetirementLocation={() => handleUserInput("edit location", "chip")}
                   onEdit={() => {
-                    const input = enrollmentState.investmentStrategy === 'MANUAL' ? 'edit allocation' : 'edit investment';
+                    const input = enrollmentState.investmentStrategy === 'MANUAL' ? 'customise allocation' : 'edit investment';
                     handleEnrollmentChoice(input, 'Edit selection');
                   }}
                 />

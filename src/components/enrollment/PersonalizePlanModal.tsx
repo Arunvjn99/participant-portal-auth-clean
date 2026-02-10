@@ -36,8 +36,6 @@ const RETIREMENT_LOCATIONS: DropdownOption[] = [
 ];
 
 const SAVINGS_TYPES: DropdownOption[] = [
-  { label: "IRA", value: "IRA" },
-  { label: "Mutual Funds", value: "Mutual Funds" },
   { label: "Real Estate", value: "Real Estate" },
   { label: "Savings Account", value: "Savings Account" },
   { label: "401(k) Other", value: "401k Other" },

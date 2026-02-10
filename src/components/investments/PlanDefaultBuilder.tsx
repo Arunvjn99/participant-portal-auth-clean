@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DashboardCard } from "../dashboard/DashboardCard";
 import Button from "../ui/Button";
 import { FundAllocationRow } from "./FundAllocationRow";
+import { ModerateInvestorChip } from "./ModerateInvestorChip";
 import { AfterTaxAccordion } from "./AfterTaxAccordion";
 import { useInvestment } from "../../context/InvestmentContext";
 import { getFundById } from "../../data/mockFunds";
@@ -44,7 +45,7 @@ export const PlanDefaultBuilder = () => {
             </span>
             <div>
               <h3 className="plan-default-builder__title">{planDefaultPortfolio.name}</h3>
-              <span className="plan-default-builder__badge">MODERATE INVESTOR</span>
+              <ModerateInvestorChip variant="badge" className="mr-2">MODERATE INVESTOR</ModerateInvestorChip>
               <span className="plan-default-builder__confidence">88% confidence</span>
             </div>
           </div>
@@ -64,7 +65,7 @@ export const PlanDefaultBuilder = () => {
             </div>
             <div className="plan-default-builder__kpi">
               <span className="plan-default-builder__kpi-label">RISK LEVEL</span>
-              <span className="plan-default-builder__kpi-value plan-default-builder__kpi-value--pill">Medium</span>
+              <ModerateInvestorChip variant="pill">Medium</ModerateInvestorChip>
             </div>
           </div>
           <label className="plan-default-builder__toggle">
@@ -74,7 +75,7 @@ export const PlanDefaultBuilder = () => {
               onChange={(e) => setPlanDefaultEditEnabled(e.target.checked)}
               className="plan-default-builder__toggle-input"
             />
-            <span className="plan-default-builder__toggle-text">Edit allocation</span>
+            <span className="plan-default-builder__toggle-text">Customise allocation</span>
             <span className="plan-default-builder__toggle-desc">Enable to customize recommended allocations and add investments.</span>
           </label>
         </div>

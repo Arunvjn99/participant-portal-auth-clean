@@ -594,7 +594,7 @@ function handleManualAllocationStep(state: EnrollmentState, input: string): Enro
 function handleReviewStep(state: EnrollmentState, input: string): EnrollmentResponse {
   const yes = matchesPattern(input, ["yes", "yep", "ok", "okay", "submit", "confirm"]);
   const no = matchesPattern(input, ["no", "not now", "later"]);
-  const edit = matchesPattern(input, ["edit", "change"]);
+  const edit = matchesPattern(input, ["edit", "change", "customise", "customize"]);
 
   if (yes) {
     return {

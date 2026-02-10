@@ -1,4 +1,5 @@
 import { DashboardCard } from "../dashboard/DashboardCard";
+import { ModerateInvestorChip } from "./ModerateInvestorChip";
 
 /** Filter icon for header */
 const FilterIcon = () => (
@@ -34,9 +35,7 @@ export const PlanDefaultPortfolioCard = () => {
           <div className="min-w-0 flex-1">
             <h3 className="m-0 text-xl font-semibold text-foreground">Plan Default Portfolio</h3>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-green-600 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-white dark:bg-green-500">
-                MODERATE INVESTOR
-              </span>
+              <ModerateInvestorChip variant="badge">MODERATE INVESTOR</ModerateInvestorChip>
               <span className="text-sm text-muted-foreground">88% confidence</span>
             </div>
           </div>
@@ -70,9 +69,7 @@ export const PlanDefaultPortfolioCard = () => {
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">RISK LEVEL</span>
-            <span className="inline-block w-fit rounded-full bg-green-600 px-2.5 py-0.5 text-sm font-semibold text-white dark:bg-green-500">
-              Medium
-            </span>
+            <ModerateInvestorChip variant="pill">Medium</ModerateInvestorChip>
           </div>
         </div>
       </div>
